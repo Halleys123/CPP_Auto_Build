@@ -4,6 +4,7 @@
 #include <chrono>
 #include <thread>
 #include <fstream>
+#include <string>
 
 using namespace std;
 
@@ -25,13 +26,13 @@ void run_make_command()
 {
     system("make");
 }
-void monitor_files(const string &path)
+void monitor_files(const string &path, int interval)
 {
     auto file_mod_times = get_file_mod_times(path);
 
     while (true)
     {
-        this_thread::sleep_for(chrono::seconds(1));
+        this_thread::sleep_for(chrono::milliseconds(interval));
         for (const auto &entry : fs::recursive_directory_iterator(path))
         {
             if (entry.path().extension() == ".cpp")
@@ -49,9 +50,19 @@ void monitor_files(const string &path)
     }
 }
 
-int main()
+int main(int argc, char *argv[])
 {
     string path = "./";
-    monitor_files(path);
+    int interval;
+
+    if (argc < 2)
+    {
+        interval = 1;
+    }
+    else
+        interval = stoi(argv[1]);
+
+    printf("Using %d miliseconds as interval for update", interval);
+    monitor_files(path, interval);
     return 0;
 }
