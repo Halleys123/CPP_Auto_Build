@@ -22,14 +22,16 @@ void show_error_message(const std::string &message)
         0,
         TEXT("STATIC"),
         NULL,
-        WS_OVERLAPPEDWINDOW,
-        0, 0, 0, 0,
+        WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+        CW_USEDEFAULT, CW_USEDEFAULT, 100, 100,
         NULL,
         NULL,
         NULL,
         NULL);
 
-    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_HIDEWINDOW);
+    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+
+    SetForegroundWindow(hwnd);
 
     MessageBoxW(
         hwnd,
