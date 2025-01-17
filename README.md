@@ -3,10 +3,11 @@
 ## Overview
 
 - `auto_build` is a C++ utility that monitors `.cpp` files in a specified directory for changes. When a change is detected, it automatically runs the `make` command to rebuild the project. This tool is useful for developers who want to automate the build process during development, ensuring that their project is always up-to-date with the latest changes.
-- `auto_build_windows.cpp` works similar to `auto_build.cpp` but it alerts you when your build fail by using window's MessageBox from `windows.h`, and as the name suggests it can be used on windows machine that are running at least `Windows 2000 Professional`.   
+- There are two options when using the tool you can either use the General version that works on all machines including, UNIX, Linux, Mac, and Windows or you can use the Windows specific version that works only on Windows machines. That are running at least `Windows 2000 Professional` or in technical terms at least support `Win32 API`. Although for now there are not many differences in this version **for now** but provides you with a Windows style MessageBox that alerts you when your build fails.
+
 ## How It Works
 
-1. **File Scanning**: The program scans the specified directory and its subdirectories for `.cpp` files, excluding `auto_build.cpp` itself.
+1. **File Scanning**: The program scans the specified directory and its subdirectories for `.cpp` files.
 2. **Record Modification Times**: It records the last modification times of these files.
 3. **Monitoring Loop**: It enters a loop where it periodically checks the modification times of the files.
 4. **Detect Changes**: If a change is detected in any of the `.cpp` files, it prints the file path to the console and runs the `make` command to rebuild the project.
@@ -18,15 +19,45 @@
    git clone https://github.com/Halleys123/CPP_Auto_Build
    cd auto_build
    ```
-2. **Compile the Program**: Compile `auto_build.cpp` using your preferred C++ compiler. For example:
+2. **Compile the Program**: Compile `main.cpp` using using g++ compiler, by using the given make file:
    ```sh
-   g++ -std=c++17 -o auto_build auto_build.cpp
+      make build
+   ```
+   - You can use above command if you want to build general version of the program.
+   - As for Windows users you can use to build the Windows specific version of the program:
+   ```sh
+   make build BUILD=WIN
    ```
 3. **Run the Program**: Execute the compiled binary, specifying the directory to monitor. By default, it monitors the current directory (`./`):
    ```sh
-   ./auto_build
+   ./build.exe
    ```
 4. **Modify Files**: Make changes to any `.cpp` files in the monitored directory. The program will detect the changes and automatically run the `make` command.
+
+## Setting Flags
+
+You can set various flags when running the program:
+
+- **Interval**: Set the monitoring interval in milliseconds.
+  ```sh
+  ./auto_build --interval 200
+  ```
+- **Enable Logging**: Enable or disable logging.
+  ```sh
+  ./auto_build --log true
+  ```
+- **Log File**: Set the log file path.
+  ```sh
+  ./auto_build --log_file log.txt
+  ```
+- **Default Interval**: Set the default interval used by the program if the user interval is invalid.
+  ```sh
+  ./auto_build --default_interval 100
+  ```
+- **Help**: Display the help message.
+  ```sh
+  ./auto_build --help
+  ```
 
 ## Requirements
 
@@ -36,13 +67,16 @@
 ## Notes
 
 - **Make Configuration**: Ensure that the `make` command is properly configured to build your project. This typically involves having a `Makefile` in the root of your project directory.
-- **Monitoring Interval**: The monitoring interval is set to 1 second. You can adjust this interval by modifying the `sleep_for` duration in the `monitor_files` function.
+- **Monitoring Interval**: The monitoring interval is set to 100 miliseconds. You can adjust this interval by using the `-df <interval>` flag, where `<interval>` is the desired interval in miliseconds.
+- **Logging**: By default, logging is disabled. You can enable logging by using the `-log true` flag.
+
+## Example
 
 ## Example
 
 Here is an example of how to use `auto_build`:
 
-1. **Create your Project Folder**: In the given command block a file called main.cpp is generated.
+1. **Create your Project Folder**: In the given command block, a file called `main.cpp` is generated.
    ```sh
    mkdir sample_project
    cd sample_project

@@ -26,6 +26,7 @@ void use_default_config(string &interval_str, string &user_interval_str, string 
 
 int main(int argc, char *argv[])
 {
+    // TODO(HALLEYS): Add path option to config.cfg so that user can change what directories to monitor.
     string path = "./";
     string interval_str = "100";                     // Default interval as string
     string user_interval_str = "-1";                 // Default user interval as string
