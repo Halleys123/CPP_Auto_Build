@@ -8,6 +8,6 @@
 
 std::unordered_map<std::string, time_t> get_file_mod_times(const std::string &path);
 std::string get_current_time();
-void log_change(const std::string &message);
+void log_change(const string &message, const string &log_filename);
 
 #endif // COMMON_FUNCTIONS_H

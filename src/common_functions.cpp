@@ -32,30 +32,8 @@ string get_current_time()
     return string(buf);
 }
 
-void log_change(const string &message)
+void log_change(const string &message, const string &log_filename = "auto_update_history.log")
 {
-    ifstream config_file("config.cfg");
-    string line;
-    bool generate_log = false;
-
-    if (config_file.is_open())
-        while (getline(config_file, line))
-        {
-            if (line.find("GENERATE_LOG") != string::npos)
-            {
-                istringstream iss(line);
-                string key, value;
-                if (getline(iss, key, '=') && getline(iss, value))
-                {
-                    generate_log = (value == "true");
-                    printf("Logging is: %s\n", generate_log ? "Enabled" : "Disabled");
-                }
-            }
-        }
-
-    if (generate_log)
-    {
-        ofstream log_file("auto_update_history.log", ios_base::app);
-        log_file << "[" << get_current_time() << "] " << message << endl;
-    }
+    ofstream log_file(log_filename, ios_base::app);
+    log_file << "[" << get_current_time() << "] " << message << endl;
 }

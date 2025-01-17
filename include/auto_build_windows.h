@@ -3,7 +3,6 @@
 
 #include <string>
 
-#include "../include/common_functions.h"
 #include "../src/auto_build_windows.cpp"
 
 void show_error_message(const std::string &message);

@@ -3,11 +3,14 @@
 #include <chrono>
 #include <thread>
 #include <string>
+#include <unordered_map>
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used APIs
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
+
+#include "../include/common_functions.h"
 
 using namespace std;
 
