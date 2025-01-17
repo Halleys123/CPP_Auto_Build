@@ -5,9 +5,11 @@
 
 #include "./include/common_functions.h"
 
-#if defined(WIN)
+#ifndef _WIN32
+#include "./include/auto_build.h"
+#elif defined(WIN)
 #include "./include/auto_build_windows.h"
-#elif defined(GEN)
+#else
 #include "./include/auto_build.h"
 #endif
 
