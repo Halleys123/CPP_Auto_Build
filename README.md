@@ -115,3 +115,12 @@ This project is licensed under the MIT License.
 ### Demerits
 
 - If using this feature you should try to keep all files names unique wether they are in different directories or not. As the program will only check the file name and not the path.
+
+## Update 1.2
+
+> Dated: 27:01:2025::02:52:32
+
+### Bugs Fixed
+
+- Config.cfg will not invalidate on reading comments starting with hash '#'.
+- The `config.cfg` file will no longer be invalidated when reading lines with special commands such as `test.cpp,test1/cpp="make test"` or `test.cpp="make t"`, which previously caused invalidation.

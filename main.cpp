@@ -81,10 +81,23 @@ bool is_config_valid()
     {
         while (getline(config_file, line))
         {
-            if (line.find('=') == string::npos || line.find(':') == string::npos)
+            // Skip comments
+            if (line.find('#') == 0)
+            {
+                continue;
+            }
+
+            size_t equal_pos = line.find('=');
+            if (equal_pos == string::npos)
             {
                 cout << "Configuration file is invalid using defaults." << endl;
                 return false;
+            }
+            // Check if there is a colon after the equal sign
+            size_t colon_pos = line.find(':', equal_pos);
+            if (colon_pos != string::npos && colon_pos < line.length() - 1)
+            {
+                continue; // Valid entry with colon after equal sign
             }
         }
         config_file.close();
