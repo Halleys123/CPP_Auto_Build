@@ -124,3 +124,7 @@ This project is licensed under the MIT License.
 
 - Config.cfg will not invalidate on reading comments starting with hash '#'.
 - The `config.cfg` file will no longer be invalidated when reading lines with special commands such as `test.cpp,test1/cpp="make test"` or `test.cpp="make t"`, which previously caused invalidation.
+
+## Update 2.0 (Major Update)
+
+- Complete overhaul of the codebase.
