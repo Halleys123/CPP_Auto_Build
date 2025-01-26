@@ -97,3 +97,21 @@ Here is an example of how to use `auto_build`:
 ## License
 
 This project is licensed under the MIT License.
+
+# Updates
+
+## Update 1.1
+
+> Dated: 27:01:2025::02:34:56
+
+### Merits
+
+- Now you can make run specific commands for a change in specific files. For example, if you want to run `make dll_test` command if your files say `dll_test.cpp` changes you can do that by adding a `config.cfg` file in the same directory as the `auto_build` executable. The `config.cfg` file should be in the following format:
+  ```cfg
+  dll_test.cpp="make dll_test"
+  ```
+  This will run the `make dll_test` command if `dll_test.cpp` changes.
+
+### Demerits
+
+- If using this feature you should try to keep all files names unique wether they are in different directories or not. As the program will only check the file name and not the path.
