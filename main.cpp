@@ -1,23 +1,32 @@
+#include "Colors.h"
+#include "BuildDaemon.hpp"
 #include <iostream>
 #include <fstream>
-#include "./src/ConfigManager.cpp"
+#include <cstring>
 
 using namespace std;
 
+void parsePathsFromArguments(const char *&configFile, const char *&logFile, char **argv, int argc)
+{
+    for (int i = 1; i < argc; i++)
+    {
+        if (strcmp(argv[i], "-c") == 0)
+        {
+            configFile = argv[i + 1];
+        }
+        else if (strcmp(argv[i], "-l") == 0)
+        {
+            logFile = argv[i + 1];
+        }
+    }
+}
+
 int main(int argc, char **argv)
 {
-    if (argc < 2)
-    {
-        std::cout << "Usage: " << argv[0] << " <config file>" << std::endl;
-        return 1;
-    }
-    ifstream fileReader(argv[1]);
-    if (!fileReader)
-    {
-        std::cerr << "Error opening file: " << argv[1] << std::endl;
-        return 1;
-    }
-    Logger Log(argv[1]);
-    ConfigManager configmanager(Log, "./config.cfg");
+    const char *configFile = nullptr;
+    const char *logFile = nullptr;
+    parsePathsFromArguments(configFile, logFile, argv, argc);
+
+    BuildDaemon buildDaemon(configFile, logFile);
     return 0;
 }

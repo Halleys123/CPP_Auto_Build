@@ -1,7 +1,9 @@
-#include <iostream>
-#include <ostream>
-#include <istream>
+#include "Logger.hpp"
 
 class ConfigManager
 {
+public:
+    ConfigManager(const char *configFile, Logger *logger)
+    {
+    }
 };
