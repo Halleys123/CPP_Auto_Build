@@ -45,3 +45,9 @@
 ## BuildDaemon
 
 - This class will be the main class that will have the responsibility to run the program.
+
+### Structure
+
+<!-- Image path -->
+
+![Structure](../assets/structure.png)
