@@ -12,6 +12,7 @@ const char *ORANGE_F = "\x1b[38;2;255;140;0m";
 const char *DARK_GREY_F = "\x1b[38;2;155;155;155m";
 const char *GREEN_F = "\x1b[38;2;63;255;0m";
 const char *BLUE_F = "\x1b[38;2;0;185;232m";
+const char *JOGGER_BLUE_F = "\x1b[38;2;138;185;241m";
 const char *RESET_F = "\x1b[39m";
 
 // BACKGROUND
@@ -37,6 +38,16 @@ class Logger
 private:
     FILE *file;
     bool initialized = false;
+    static int instanceCount;
+    int instanceNumber = 0;
+
+public:
+    const char *red = RED_F;
+    const char *yellow = YELLOW_F;
+    const char *white = WHITE_F;
+    const char *green = GREEN_F;
+    const char *joggerBlue = JOGGER_BLUE_F;
+    const char *reset = RESET_F;
 
 private:
     const char *getTime()
@@ -77,12 +88,16 @@ private:
             break;
         }
 
+        // Printing date and time, status and color
         printf("%s%s%s%s %s%s: %s", GREY_F, DATE_BACKGROUND, getTime(), RESET_BACKGROUND, color, statusFull, RESET_F);
 
+        // Printing main message passed by user
         vprintf(message, args);
 
+        // Printing new line and resetting color
         printf("%s\n", RESET_F);
 
+        // Printing to file if initialized
         if (initialized && file)
         {
             va_list args_copy;
@@ -93,10 +108,17 @@ private:
             va_end(args_copy);
         }
     }
+    void handleInstance()
+    {
+        instanceCount++;
+        instanceNumber = instanceCount;
+        log('I', "Logger instance count: %d", instanceCount);
+    }
 
 public:
     Logger()
     {
+        handleInstance();
         initialized = false;
         file = nullptr;
         log('S', "Logger Initiated in console log mode only");
@@ -104,6 +126,7 @@ public:
 
     Logger(const char *filename)
     {
+        handleInstance();
         file = fopen(filename, "w");
         if (file)
         {
@@ -122,7 +145,9 @@ public:
     {
         if (file)
         {
+            log('I', "Logger is closing, closing log file");
             fclose(file);
+            log('S', "Log file closed successfully");
         }
     }
 
@@ -152,3 +177,5 @@ public:
         va_end(args);
     }
 };
+
+int Logger::instanceCount = 0;
