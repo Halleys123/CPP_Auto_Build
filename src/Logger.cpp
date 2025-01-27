@@ -2,6 +2,7 @@
 #include <chrono>
 #include <cstdarg>
 #include <regex>
+#include <fstream> // Include ofstream
 #include "Colors.h"
 #include "Logger.hpp"
 
@@ -18,6 +19,8 @@ struct STATUS
     char WARNING = 'W';
     char INFO = 'I';
 };
+
+std::ofstream logFile; // Use ofstream instead of FILE*
 
 int Logger::instanceCount = 0;
 
@@ -69,7 +72,7 @@ void Logger::print(char status, const char *message, va_list args)
     printf("%s\n", RESET_F);
 
     // Printing to file if initialized
-    if (initialized && file)
+    if (initialized && logFile.is_open())
     {
         // QUESTION(ARNAV): How to remove color related info from the message before writing to file?
         // ANSWER(STATUS): Complete by use of regex
@@ -79,9 +82,9 @@ void Logger::print(char status, const char *message, va_list args)
         vsnprintf(buffer, sizeof(buffer), message, args_copy);
         std::string filteredMessage = buffer;
         filteredMessage = std::regex_replace(filteredMessage, std::regex("\x1b\\[[0-9;]*m"), "");
-        fprintf(file, "%s %s: %s\n", getTime(), statusFull, filteredMessage.c_str());
+        logFile << getTime() << " " << statusFull << ": " << filteredMessage << std::endl;
         va_end(args_copy);
-        fflush(file); // Ensure the log messages are written to the file immediately
+        logFile.flush(); // Ensure the log messages are written to the file immediately
     }
 }
 
@@ -89,26 +92,25 @@ void Logger::handleInstance()
 {
     instanceCount++;
     instanceNumber = instanceCount;
-    log('I', "Logger instance count: %d", instanceCount);
+    log('I', "Logger instance count: %s%d%s", MEDIUM_STATE_BLUE_F, instanceCount, RESET_F);
 }
 
 Logger::Logger()
 {
     handleInstance();
     initialized = false;
-    file = nullptr;
     log('S', "Logger Initiated in console log mode only");
 }
 
 Logger::Logger(const char *filename)
 {
     handleInstance();
-    file = fopen(filename, "a+");
-    if (file)
+    logFile.open(filename, std::ios::app);
+    if (logFile.is_open())
     {
         initialized = true;
         log('S', "Logger Initiated in file log mode");
-        log('I', "File that will be used for logging is: %s", filename);
+        log('I', "File that will be used for logging is: %s%s%s", MEDIUM_STATE_BLUE_F, filename, RESET_F);
     }
     else
     {
@@ -119,24 +121,25 @@ Logger::Logger(const char *filename)
 
 Logger::~Logger()
 {
-    if (file)
+    if (logFile.is_open())
     {
         log('I', "Logger is closing, closing log file");
-        fclose(file);
+        logFile.close();
         log('S', "Log file closed successfully");
     }
 }
 
 void Logger::setLogFile(const char *filename)
 {
-    FILE *newFile = fopen(filename, "a+");
-    if (newFile)
+    std::ofstream newLogFile;
+    newLogFile.open(filename, std::ios::app);
+    if (newLogFile.is_open())
     {
-        if (file)
+        if (logFile.is_open())
         {
-            fclose(file);
+            logFile.close();
         }
-        file = newFile;
+        logFile = std::move(newLogFile);
         initialized = true;
     }
     else

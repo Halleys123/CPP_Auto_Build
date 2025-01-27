@@ -19,6 +19,9 @@ BuildDaemon::BuildDaemon(const char *configFile, const char *logFile)
         return;
     }
     configManager = new ConfigManager(configFile, logger);
-    logger->log('I', "Log file: %s%s%s", MEDIUM_STATE_BLUE_F, logFile, RESET_F);
-    logger->log('I', "Config file: %s%s%s", MEDIUM_STATE_BLUE_F, configFile, RESET_F);
+    if (!configManager)
+    {
+        logger->log('E', "Failed to create ConfigManager");
+        return;
+    }
 }
