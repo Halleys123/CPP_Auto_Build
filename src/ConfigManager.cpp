@@ -77,7 +77,7 @@ void ConfigManager::ParseFile(int parseTries)
             // ? it will not use value from the configuration file.
             if (logger->isInit() && this->LogFile)
             {
-                logger->log('I', "Configuration file path already provided in arguments.");
+                logger->log('W', "%sLOGFILE%s path provided in arguments, ignoring path in configuration file.", MEDIUM_STATE_BLUE_F, RESET_F);
                 continue;
             }
 
@@ -102,6 +102,13 @@ void ConfigManager::ParseFile(int parseTries)
         // }
         else
         {
+            // TODO(ARNAV): Check for file names seperated by comma and a make command after equal
+            // ? If any of these file changes then build command specified in front of them will run
+            // ? Example:
+            // ? Logger.cpp,Logger.hpp=make dllcmd
+            // ? test.h=make test
+            // * Here only processing the files in a 2d table be done here
+            // * Actual file checking should be done in BuildDaemon
             logger->log('W', "Unknown key in config file: %s", key.c_str());
         }
     }

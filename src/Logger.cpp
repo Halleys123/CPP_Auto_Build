@@ -148,7 +148,6 @@ void Logger::setLogFile(const char *filename)
     newLogFile.open(filename, std::ios::app);
     if (newLogFile.is_open())
     {
-        log('S', "%s%s%s file successfully opened.", MEDIUM_STATE_BLUE_F, filename, RESET_F);
         if (logFile.is_open())
         {
             log('W', "Closing old log file");
@@ -156,6 +155,7 @@ void Logger::setLogFile(const char *filename)
         }
         logFile = std::move(newLogFile);
         initialized = true;
+        log('S', "%s%s%s file successfully opened.", MEDIUM_STATE_BLUE_F, filename, RESET_F);
     }
     else
     {
