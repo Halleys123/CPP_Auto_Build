@@ -143,12 +143,15 @@ Logger::~Logger()
 
 void Logger::setLogFile(const char *filename)
 {
+    log('I', "Setting log file to %s%s%s", MEDIUM_STATE_BLUE_F, filename, RESET_F);
     std::ofstream newLogFile;
     newLogFile.open(filename, std::ios::app);
     if (newLogFile.is_open())
     {
+        log('S', "%s%s%s file successfully opened.", MEDIUM_STATE_BLUE_F, filename, RESET_F);
         if (logFile.is_open())
         {
+            log('W', "Closing old log file");
             logFile.close();
         }
         logFile = std::move(newLogFile);
@@ -178,4 +181,9 @@ void Logger::disableLogging()
 {
     this->log('S', "Logging is disabled.");
     this->shouldLogToFile = false;
+}
+
+bool Logger::isInit()
+{
+    return initialized;
 }

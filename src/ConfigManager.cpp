@@ -6,15 +6,18 @@
 
 #define DEFAULT_FILE "config.cfg"
 
-ConfigManager::ConfigManager(const char *configFile, Logger *logger)
+ConfigManager::ConfigManager(const char *configFile, const char *logFile, Logger *logger)
 {
+    int parseTries = 1;
+
     this->logger = logger;
     this->configFile = configFile;
+    this->LogFile = logFile;
     logger->log('I', "ConfigManager initiated with config file: %s%s%s", MEDIUM_STATE_BLUE_F, configFile, RESET_F);
-    this->ParseFile();
+    this->ParseFile(parseTries);
 }
 
-void ConfigManager::ParseFile(int parseTries = 0)
+void ConfigManager::ParseFile(int parseTries)
 {
     if (!configFile)
     {
@@ -40,15 +43,16 @@ void ConfigManager::ParseFile(int parseTries = 0)
     std::string line;
     while (std::getline(ConfigFile, line))
     {
-        // TODO(ARNAV): Add check for wether only one = is present checking position of first and last =
+        // TODO(ARNAV): Add check for wether only one equalto (=) is present by checking position of first and last euqalto(=)
         int pos = line.find("=");
         if (line[0] == '#')
         {
             logger->log('I', "Comment detected, ignoring line.");
+            continue;
         }
         if (pos == std::string::npos)
         {
-            logger->log('W', "Invalid line in config file: %s", line.c_str());
+            logger->log('E', "Invalid line in config file: %s", line.c_str());
             continue;
         }
         std::string key = line.substr(0, pos);
@@ -57,10 +61,29 @@ void ConfigManager::ParseFile(int parseTries = 0)
         if (key == "INTERVAL")
         {
             this->Interval = std::stoi(value);
+            logger->log('S', "Using Interval from configuration file: %s%d%s miliseconds", MEDIUM_STATE_BLUE_F, this->Interval, RESET_F);
         }
         else if (key == "LOGTOFILE")
         {
             this->LogToFile = (value == "1");
+            logger->log('S', "Logs will %s%s logged%s to file", MEDIUM_STATE_BLUE_F, this->LogToFile ? "be" : "not be", RESET_F);
+
+            if (this->LogFile)
+                logger->setLogFile(this->LogFile);
+        }
+        else if (key == "LOGFILE")
+        {
+            // ? This makes sure if the user has provided logfile in the arguments of program then
+            // ? it will not use value from the configuration file.
+            if (logger->isInit() && this->LogFile)
+            {
+                logger->log('I', "Configuration file path already provided in arguments.");
+                continue;
+            }
+
+            this->LogFile = value.c_str();
+            if (this->LogToFile)
+                logger->setLogFile(this->LogFile);
         }
         // else if (key == "EXCLUDEDIRECTORIES")
         // {
@@ -91,6 +114,8 @@ void ConfigManager::CreateFile()
     logger->log('I', "Writing to config file: %sINTERVAL=150%s", MEDIUM_STATE_BLUE_F, RESET_F);
     ConfigFile << "LOGTOFILE=0\n";
     logger->log('I', "Writing to config file: %sLOGTOFILE=1%s", MEDIUM_STATE_BLUE_F, RESET_F);
+    ConfigFile << "LOGFILE=./auto_build.log\n";
+    logger->log('I', "Writing to config file: %sLOGFILE=auto_build.log%s", MEDIUM_STATE_BLUE_F, RESET_F);
     ConfigFile << "EXCLUDEDIRECTORIES=./bin\n";
     logger->log('I', "Writing to config file: %sEXCLUDEDIRECTORIES=./bin%s", MEDIUM_STATE_BLUE_F, RESET_F);
     ConfigFile << "EXCLUDEFILES=\n";
@@ -101,11 +126,11 @@ void ConfigManager::CreateFile()
     this->configFile = DEFAULT_FILE;
 }
 
+// Getter functions
 int ConfigManager::getInterval()
 {
     return this->Interval;
 }
-
 bool ConfigManager::getLogToFile()
 {
     return this->LogToFile;
@@ -121,4 +146,8 @@ const char **ConfigManager::getExcludeFiles()
 const char **ConfigManager::getExtensionsToCheck()
 {
     return this->ExtensionsToCheck;
+}
+const char *ConfigManager::getLogFile()
+{
+    return this->LogFile;
 }

@@ -24,4 +24,6 @@ public:
     void log(char status, const char *message, ...);
     void enableLogging();
     void disableLogging();
+
+    bool isInit();
 };

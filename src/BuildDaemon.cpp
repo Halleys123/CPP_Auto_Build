@@ -10,7 +10,7 @@ BuildDaemon::BuildDaemon(const char *configFile, const char *logFile)
         printf("Failed to create logger\n");
         return;
     }
-    configManager = new ConfigManager(configFile, logger);
+    configManager = new ConfigManager(configFile, logFile, logger);
     if (!configManager)
     {
         logger->log('E', "Failed to create ConfigManager");
