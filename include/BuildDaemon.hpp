@@ -8,4 +8,5 @@ class BuildDaemon
 
 public:
     BuildDaemon(const char *configFile, const char *logFile);
+    void watch();
 };

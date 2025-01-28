@@ -8,6 +8,7 @@ class Logger
 private:
     FILE *file;
     bool initialized;
+    bool shouldLogToFile = false;
     static int instanceCount;
     int instanceNumber;
 
@@ -21,4 +22,6 @@ public:
     ~Logger();
     void setLogFile(const char *filename);
     void log(char status, const char *message, ...);
+    void enableLogging();
+    void disableLogging();
 };

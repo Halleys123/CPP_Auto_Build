@@ -1,14 +1,6 @@
 #include "Logger.hpp"
 #include "ConfigManager.hpp"
-
-class BuildDaemon
-{
-    Logger *logger = nullptr;
-    ConfigManager *configManager = nullptr;
-
-public:
-    BuildDaemon(const char *configFile, const char *logFile);
-};
+#include "BuildDaemon.hpp"
 
 BuildDaemon::BuildDaemon(const char *configFile, const char *logFile)
 {
@@ -24,4 +16,8 @@ BuildDaemon::BuildDaemon(const char *configFile, const char *logFile)
         logger->log('E', "Failed to create ConfigManager");
         return;
     }
+}
+
+void BuildDaemon::watch()
+{
 }

@@ -72,7 +72,12 @@ void Logger::print(char status, const char *message, va_list args)
     printf("%s\n", RESET_F);
 
     // Printing to file if initialized
-    if (initialized && logFile.is_open())
+    if (shouldLogToFile && !initialized)
+    {
+        this->log('E', "Configuration file not set or found, set log file in configuration file");
+        return;
+    }
+    if (shouldLogToFile && initialized && logFile.is_open())
     {
         // QUESTION(ARNAV): How to remove color related info from the message before writing to file?
         // ANSWER(STATUS): Complete by use of regex
@@ -104,6 +109,13 @@ Logger::Logger()
 
 Logger::Logger(const char *filename)
 {
+    if (!filename)
+    {
+        handleInstance();
+        initialized = false;
+        log('S', "Logger Initiated in console log mode only");
+        return;
+    }
     handleInstance();
     logFile.open(filename, std::ios::app);
     if (logFile.is_open())
@@ -154,4 +166,16 @@ void Logger::log(char status, const char *message, ...)
     va_start(args, message);
     print(status, message, args);
     va_end(args);
+}
+
+void Logger::enableLogging()
+{
+    this->log('S', "Logging is enabled.");
+    this->shouldLogToFile = true;
+}
+
+void Logger::disableLogging()
+{
+    this->log('S', "Logging is disabled.");
+    this->shouldLogToFile = false;
 }

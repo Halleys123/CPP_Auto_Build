@@ -28,5 +28,6 @@ int main(int argc, char **argv)
     parsePathsFromArguments(configFile, logFile, argv, argc);
 
     BuildDaemon buildDaemon(configFile, logFile);
+    buildDaemon.watch();
     return 0;
 }
