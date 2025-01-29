@@ -16,7 +16,7 @@ private:
 
 private:
     void ParseFile(int parseCount = 0);
-    void CreateFile();
+    bool CreateFile();
 
 public:
     ConfigManager(const char *configFile, const char *logFile, Logger *logger);
