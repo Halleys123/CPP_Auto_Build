@@ -1,7 +1,7 @@
 #pragma once
 #include <stdio.h>
 #include <cstdarg>
-#include "Colors.h"
+#include "ColorsDefinitions.h"
 
 class Logger
 {

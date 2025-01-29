@@ -3,7 +3,7 @@
 #include <cstdarg>
 #include <regex>
 #include <fstream> // Include ofstream
-#include "Colors.h"
+#include "ColorsDefinitions.h"
 #include "Logger.hpp"
 
 // TEXT COLOR

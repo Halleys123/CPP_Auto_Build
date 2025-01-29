@@ -14,4 +14,4 @@ complete_build: main.cpp
 # 	g++ -shared -o test.dll test.cpp $(include_dir)
 
 Logger: $(src_dir)/Logger.cpp
-	g++ -shared -o ${build_dir}/Logger.dll $(src_dir)/Logger.cpp ${src_dir}/Colors.cpp $(include_dir)
+	g++ -shared -o ${build_dir}/Logger.dll $(src_dir)/Logger.cpp $(include_dir)

@@ -1,5 +1,5 @@
 #include "Logger.hpp"
-#include "Colors.h"
+#include "ColorsDefinitions.h"
 #include "ConfigManager.hpp"
 #include <fstream>
 #include <stdio.h>
