@@ -229,6 +229,27 @@ void ConfigManager::ParseFile(int parseTries)
             p_ExtensionsToCheck[pos + 1] = nullptr;
             this->ExtensionsToCheck = p_ExtensionsToCheck;
         }
+        else if (key == "SCANDIRECTORY")
+        {
+            if (value == "")
+            {
+                logger->log('I', "Scan Directory not provided in configuration file, scanning subfolders recursively.");
+                this->ScanDirectory = "./";
+                continue;
+            }
+            this->ScanDirectory = value.c_str();
+            logger->log('I', "Scan Directory set to: %s%s%s.", MEDIUM_STATE_BLUE_F, this->ScanDirectory, RESET_F);
+        }
+        else if (key == "START")
+        {
+            if (value == "SPECIALCOMMANDS")
+            {
+                // complete it
+                // steps are scan each line between start and end
+                // when reached end
+                // seek to next line give control back to while loop
+            }
+        }
         else
         {
             // TODO(ARNAV): Check for file names seperated by comma and a make command after equal
@@ -272,6 +293,14 @@ bool ConfigManager::getLogToFile()
 {
     return this->LogToFile;
 }
+const char *ConfigManager::getLogFile()
+{
+    return this->LogFile;
+}
+const char *ConfigManager::getScanDirectory()
+{
+    return this->ScanDirectory;
+}
 const char **ConfigManager::getExcludeDirectories()
 {
     return this->ExcludeDirectories;
@@ -284,7 +313,7 @@ const char **ConfigManager::getExtensionsToCheck()
 {
     return this->ExtensionsToCheck;
 }
-const char *ConfigManager::getLogFile()
+const char **ConfigManager::getSpecialBuildCommands()
 {
-    return this->LogFile;
+    return this->SpecialBuildCommands;
 }
