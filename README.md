@@ -127,4 +127,6 @@ This project is licensed under the MIT License.
 
 ## Update 2.0 (Major Update)
 
-- Complete overhaul of the codebase.
+> Dated: 27:01:2025::03:01:45
+
+- Overhauled the entire codebase to make it more modular and easier to maintain.
