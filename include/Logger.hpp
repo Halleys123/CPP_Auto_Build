@@ -9,6 +9,7 @@ private:
     FILE *file;
     bool initialized;
     bool shouldLogToFile = false;
+    bool isFailPrinted = false;
     static int instanceCount;
     int instanceNumber;
 

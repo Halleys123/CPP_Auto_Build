@@ -29,7 +29,13 @@ BuildDaemon::BuildDaemon(const char *configFile, const char *logFile)
 void BuildDaemon::watch()
 {
     logger->log('W', "Started watch process...");
+
     const char *scanDir = configManager->getScanDirectory();
+    const char *currentDir = new char[strlen(fs::current_path().string().c_str()) + 1];
+
+    sprintf(const_cast<char *>(currentDir), fs::current_path().string().c_str());
+
+    logger->log('I', "Current absolute directory: %s%s%s", MEDIUM_STATE_BLUE_F, currentDir, RESET_F);
     logger->log('I', "Scanning directory: %s%s%s", MEDIUM_STATE_BLUE_F, scanDir, RESET_F);
 
     if (!fs::exists(fs::u8path(scanDir)))

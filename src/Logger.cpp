@@ -72,9 +72,10 @@ void Logger::print(char status, const char *message, va_list args)
     printf("%s\n", RESET_F);
 
     // Printing to file if initialized
-    if (shouldLogToFile && !initialized)
+    if (!isFailPrinted && shouldLogToFile && !initialized)
     {
         this->log('E', "Configuration file not set or found, set log file in configuration file");
+        isFailPrinted = true;
         return;
     }
     if (shouldLogToFile && initialized && logFile.is_open())
