@@ -23,6 +23,7 @@ private:
 
 public:
     ConfigManager(const char *configFile, const char *logFile, Logger *logger);
+    ~ConfigManager();
 
     int getInterval();
     bool getLogToFile();

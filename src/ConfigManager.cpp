@@ -18,6 +18,30 @@ ConfigManager::ConfigManager(const char *configFile, const char *logFile, Logger
     logger->log('I', "ConfigManager initiated with config file: %s%s%s", MEDIUM_STATE_BLUE_F, configFile, RESET_F);
     this->ParseFile(parseTries);
 }
+ConfigManager::~ConfigManager()
+{
+    if (this->LogFile)
+    {
+        delete this->LogFile;
+    }
+    if (this->ScanDirectory)
+    {
+        delete this->ScanDirectory;
+    }
+    if (this->ExcludeDirectories)
+    {
+        delete this->ExcludeDirectories;
+    }
+    if (this->ExcludeFiles)
+    {
+        delete this->ExcludeFiles;
+    }
+    if (this->ExtensionsToCheck)
+    {
+        delete this->ExtensionsToCheck;
+    }
+    this->SpecialBuildCommands.clear();
+}
 
 void ConfigManager::ParseFile(int parseTries)
 {
@@ -202,7 +226,7 @@ void ConfigManager::ParseFile(int parseTries)
             if (value == "")
             {
                 logger->log('I', "No extensions to check found");
-                this->ExtensionsToCheck = new const char *[1];
+                this->ExtensionsToCheck = const_cast<const char **>(new char *[1]);
                 this->ExtensionsToCheck[0] = nullptr;
                 continue;
             }
@@ -215,22 +239,24 @@ void ConfigManager::ParseFile(int parseTries)
             }
             logger->log('I', "Found %d extensions to check: %s%s%s", commas + 1, MEDIUM_STATE_BLUE_F, value.c_str(), RESET_F);
 
-            const char **p_ExtensionsToCheck = new const char *[commas + 2];
+            char **p_ExtensionsToCheck = new char *[commas + 2];
             int pos = 0;
             for (char i : value)
             {
                 if (i == ',')
                 {
-                    p_ExtensionsToCheck[pos] = ext.c_str();
+                    p_ExtensionsToCheck[pos] = new char[ext.size() + 1];
+                    strcpy(p_ExtensionsToCheck[pos], ext.c_str());
                     pos += 1;
                     ext = "";
                     continue;
                 }
                 ext += i;
             }
-            p_ExtensionsToCheck[pos] = ext.c_str();
+            p_ExtensionsToCheck[pos] = new char[ext.size() + 1];
+            strcpy(p_ExtensionsToCheck[pos], ext.c_str());
             p_ExtensionsToCheck[pos + 1] = nullptr;
-            this->ExtensionsToCheck = p_ExtensionsToCheck;
+            this->ExtensionsToCheck = const_cast<const char **>(p_ExtensionsToCheck);
         }
         else if (key == "SCANDIRECTORY")
         {

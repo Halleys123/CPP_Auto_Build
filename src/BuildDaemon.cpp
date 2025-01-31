@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <filesystem>
 #include <string>
+#include <cstring>
 #include "Logger.hpp"
 #include "ConfigManager.hpp"
 #include "BuildDaemon.hpp"
@@ -25,46 +26,66 @@ BuildDaemon::BuildDaemon(const char *configFile, const char *logFile)
         return;
     }
 }
-
 void BuildDaemon::watch()
 {
-    logger->log('I', "Started watch process...");
+    logger->log('W', "Started watch process...");
     const char *scanDir = configManager->getScanDirectory();
+    logger->log('I', "Scanning directory: %s%s%s", MEDIUM_STATE_BLUE_F, scanDir, RESET_F);
+
     if (!fs::exists(fs::u8path(scanDir)))
     {
         logger->log('E', "Scan directory does not exist: %s", scanDir);
         return;
     }
-    auto current_mod_times = get_files_last_modify_time(scanDir);
-    auto last_mod_times = get_files_last_modify_time(scanDir);
+
+    unordered_map<string, fs::file_time_type> lastModifiedTimes;
+
+    // Initialize the map with the current modification times
+    for (const auto &entry : fs::recursive_directory_iterator(fs::u8path(scanDir)))
+    {
+        if (should_check_for_extension(configManager->getExtensionsToCheck(), entry.path().extension().string().c_str()))
+        {
+            logger->log('I', "Found file: %s%s%s, Saving modify time as: ", MEDIUM_STATE_BLUE_F, entry.path().string().c_str(), RESET_F, get_current_time().c_str());
+            lastModifiedTimes[entry.path().string()] = fs::last_write_time(entry);
+        }
+    }
+    int time = configManager->getInterval();
+    logger->log('I', "Checking for file modifications every %d milliseconds", time);
     while (true)
     {
-        this_thread::sleep_for(chrono::seconds(configManager->getInterval()));
-        auto current_mod_times = get_files_last_modify_time(configManager->getScanDirectory());
-        for (const auto &file : current_mod_times)
+        this_thread::sleep_for(chrono::milliseconds(time));
+
+        for (const auto &entry : fs::recursive_directory_iterator(fs::u8path(scanDir)))
         {
-            // if ExtensionsToCheck contains the extension of the file
-            if (configManager->getExtensionsToCheck())
+            if (should_check_for_extension(configManager->getExtensionsToCheck(), entry.path().extension().string().c_str()))
             {
-                if (configManager->getExtensionsToCheck()[0] == nullptr)
+                auto currentModifyTime = fs::last_write_time(entry);
+
+                if (lastModifiedTimes.find(entry.path().string()) == lastModifiedTimes.end() ||
+                    lastModifiedTimes[entry.path().string()] < currentModifyTime)
                 {
-                    logger->log('I', "No extensions to check found");
-                    break;
-                }
-                for (const char **ext = configManager->getExtensionsToCheck(); *ext; ext++)
-                {
-                    if (file.first.find(*ext) != string::npos)
-                    {
-                        if (last_mod_times[file.first] != current_mod_times[file.first])
-                        {
-                            logger->log('I', "File %s%s%s has been modified", MEDIUM_STATE_BLUE_F, file.first.c_str(), RESET_F);
-                            last_mod_times[file.first] = current_mod_times[file.first];
-                        }
-                    }
+                    logger->log('I', "File modified: %s%s%s", MEDIUM_STATE_BLUE_F, entry.path().string().c_str(), RESET_F);
+                    lastModifiedTimes[entry.path().string()] = currentModifyTime;
                 }
             }
         }
     }
+}
+
+bool BuildDaemon::should_check_for_extension(const char **extensions, const char *extension)
+{
+    if (!extensions)
+    {
+        return true;
+    }
+    for (int i = 0; extensions[i] != nullptr; i++)
+    {
+        if (strcmp(extensions[i], extension) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 string BuildDaemon::get_current_time()

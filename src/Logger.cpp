@@ -104,6 +104,7 @@ Logger::Logger()
 {
     handleInstance();
     initialized = false;
+    shouldLogToFile = false; // Ensure shouldLogToFile is initialized
     log('S', "Logger Initiated in console log mode only");
 }
 
@@ -113,6 +114,7 @@ Logger::Logger(const char *filename)
     {
         handleInstance();
         initialized = false;
+        shouldLogToFile = false; // Ensure shouldLogToFile is initialized
         log('S', "Logger Initiated in console log mode only");
         return;
     }
@@ -121,12 +123,14 @@ Logger::Logger(const char *filename)
     if (logFile.is_open())
     {
         initialized = true;
+        shouldLogToFile = true; // Ensure shouldLogToFile is set to true
         log('S', "Logger Initiated in file log mode");
         log('I', "File that will be used for logging is: %s%s%s", MEDIUM_STATE_BLUE_F, filename, RESET_F);
     }
     else
     {
         initialized = false;
+        shouldLogToFile = false; // Ensure shouldLogToFile is set to false
         log('E', "Failed to open log file: %s", filename);
     }
 }
@@ -155,6 +159,7 @@ void Logger::setLogFile(const char *filename)
         }
         logFile = std::move(newLogFile);
         initialized = true;
+        shouldLogToFile = true; // Ensure shouldLogToFile is set to true
         log('S', "%s%s%s file successfully opened.", MEDIUM_STATE_BLUE_F, filename, RESET_F);
     }
     else
