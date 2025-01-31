@@ -3,6 +3,7 @@
 #include "ConfigManager.hpp"
 #include <fstream>
 #include <stdio.h>
+#include <cstring>
 
 #define DEFAULT_FILE "config.cfg"
 
@@ -20,9 +21,6 @@ ConfigManager::ConfigManager(const char *configFile, const char *logFile, Logger
 
 void ConfigManager::ParseFile(int parseTries)
 {
-    // QUESTION(Halleys): What is happening in this if logic below
-    // ANSWER(Halleys):
-
     std::ifstream ConfigFile;
 
     if (!configFile)
@@ -48,11 +46,14 @@ void ConfigManager::ParseFile(int parseTries)
         if (!CreateFile())
         {
             logger->log('E', "Failed to create config file.");
-            exit(1);
         }
-        logger->log('S', "Default configuration file created sucessfully.");
-        this->configFile = DEFAULT_FILE;
-        ConfigFile.open(this->configFile);
+        else
+        {
+
+            logger->log('S', "Default configuration file created sucessfully.");
+            this->configFile = DEFAULT_FILE;
+            ConfigFile.open(this->configFile);
+        }
     }
 
     if (!ConfigFile.is_open())
@@ -64,6 +65,7 @@ void ConfigManager::ParseFile(int parseTries)
     logger->log('I', "Parsing values from the file %s%s%s", MEDIUM_STATE_BLUE_F, this->configFile, RESET_F);
     std::string line;
     int lineNumber = 0;
+    bool isReadingSpecialCommands = false;
     while (std::getline(ConfigFile, line))
     {
         lineNumber += 1;
@@ -240,15 +242,56 @@ void ConfigManager::ParseFile(int parseTries)
             this->ScanDirectory = value.c_str();
             logger->log('I', "Scan Directory set to: %s%s%s.", MEDIUM_STATE_BLUE_F, this->ScanDirectory, RESET_F);
         }
+
         else if (key == "START")
         {
             if (value == "SPECIALCOMMANDS")
             {
-                // complete it
-                // steps are scan each line between start and end
-                // when reached end
-                // seek to next line give control back to while loop
+                logger->log('I', "Now scanning for special commands");
+                isReadingSpecialCommands = true;
             }
+        }
+        else if (key == "END" && isReadingSpecialCommands)
+        {
+            if (value == "SPECIALCOMMANDS")
+            {
+                logger->log('I', "Search for special commands ended successfully");
+                isReadingSpecialCommands = false;
+            }
+        }
+        else if (key != "END" && isReadingSpecialCommands)
+        {
+            // I will be using simple array scan line by line
+            // if git can use simple file read line by line, then why can't I
+            // Read each file name and map them along the build command
+            int comma = 0;
+            if (key == "")
+            {
+                logger->log('W', "No file provided ignoring line %d", lineNumber);
+                continue;
+            }
+            std::vector<const char *> temp;
+            temp.push_back(value.c_str());
+            std::string tempString;
+            for (char i : key)
+            {
+                if (i == ',')
+                {
+                    temp.push_back(tempString.c_str());
+                    tempString = "";
+                    continue;
+                }
+                tempString += i;
+            }
+            temp.push_back(tempString.c_str()); // Add the last file name
+            this->SpecialBuildCommands.push_back(temp);
+            char printStatement[1024] = {0}; // Allocate enough space for the print statement
+            sprintf(printStatement, "`%s` command will be used for files ", value.c_str());
+            for (const char *fileName : temp)
+            {
+                sprintf(printStatement + strlen(printStatement), " %s", fileName);
+            }
+            logger->log('I', "%s", printStatement);
         }
         else
         {
@@ -313,7 +356,7 @@ const char **ConfigManager::getExtensionsToCheck()
 {
     return this->ExtensionsToCheck;
 }
-const char **ConfigManager::getSpecialBuildCommands()
+std::vector<std::vector<const char *>> ConfigManager::getSpecialBuildCommands()
 {
     return this->SpecialBuildCommands;
 }
