@@ -112,7 +112,8 @@ void ConfigManager::ParseFile(int parseTries)
                 continue;
             }
 
-            this->LogFile = value.c_str();
+            this->LogFile = new char[strlen(value.c_str()) + 1];
+            strcpy(const_cast<char *>(this->LogFile), value.c_str());
             if (this->LogToFile)
             {
 
@@ -236,10 +237,11 @@ void ConfigManager::ParseFile(int parseTries)
             if (value == "")
             {
                 logger->log('I', "Scan Directory not provided in configuration file, scanning subfolders recursively.");
-                this->ScanDirectory = "./";
+                strcpy(const_cast<char *>(this->ScanDirectory), "./");
                 continue;
             }
-            this->ScanDirectory = value.c_str();
+            this->ScanDirectory = new char[strlen(value.c_str()) + 1];
+            strcpy(const_cast<char *>(this->ScanDirectory), value.c_str());
             logger->log('I', "Scan Directory set to: %s%s%s.", MEDIUM_STATE_BLUE_F, this->ScanDirectory, RESET_F);
         }
 
