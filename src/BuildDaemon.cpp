@@ -11,6 +11,29 @@
 using namespace std;
 namespace fs = filesystem;
 
+const char *getErrorMessage(int ExitCode)
+{
+    switch (ExitCode)
+    {
+    case 1:
+        return "Build failed. Check for compiler errors.";
+    case 2:
+        return "Makefile syntax error.";
+    case 126:
+        return "Permission denied when executing a command.";
+    case 127:
+        return "Make command not found. Is it installed?";
+    case 130:
+        return "Build interrupted (SIGINT).";
+    case 139:
+        return "Segmentation fault in a compiled program.";
+    default:
+        static char unknownMessage[50]; // Static so it persists after function returns
+        snprintf(unknownMessage, sizeof(unknownMessage), "Unknown error (exit code: %d).", ExitCode);
+        return unknownMessage;
+    }
+}
+
 BuildDaemon::BuildDaemon(const char *configFile, const char *logFile)
 {
     logger = new Logger(logFile);
@@ -30,38 +53,54 @@ void BuildDaemon::watch()
 {
     logger->log('W', "Started watch process...");
 
-    const char *scanDir = configManager->getScanDirectory();
-    const char *currentDir = new char[strlen(fs::current_path().string().c_str()) + 1];
+    std::string scanDir = configManager->getScanDirectory();
+    std::string currentDir = fs::current_path().string();
 
-    sprintf(const_cast<char *>(currentDir), fs::current_path().string().c_str());
+    logger->log('I', "Current absolute directory: %s%s%s", MEDIUM_STATE_BLUE_F, currentDir.c_str(), RESET_F);
+    logger->log('I', "Scanning directory: %s%s%s", MEDIUM_STATE_BLUE_F, scanDir.c_str(), RESET_F);
 
-    logger->log('I', "Current absolute directory: %s%s%s", MEDIUM_STATE_BLUE_F, currentDir, RESET_F);
-    logger->log('I', "Scanning directory: %s%s%s", MEDIUM_STATE_BLUE_F, scanDir, RESET_F);
+    if (scanDir != currentDir)
+    {
+        logger->log('I', "Changing directory to %s", scanDir.c_str());
+        try
+        {
+            fs::current_path(fs::u8path(scanDir));
+            currentDir = fs::current_path().string(); // Update currentDir
+            logger->log('S', "Directory changed successfully to %s", currentDir.c_str());
+        }
+        catch (const std::exception &e)
+        {
+            logger->log('E', "Failed to change directory: %s", e.what());
+            return;
+        }
+    }
 
     if (!fs::exists(fs::u8path(scanDir)))
     {
-        logger->log('E', "Scan directory does not exist: %s", scanDir);
+        logger->log('E', "Scan directory does not exist: %s", scanDir.c_str());
         return;
     }
 
-    unordered_map<string, fs::file_time_type> lastModifiedTimes;
+    std::unordered_map<std::string, fs::file_time_type> lastModifiedTimes;
 
-    // Initialize the map with the current modification times
-    for (const auto &entry : fs::recursive_directory_iterator(fs::u8path(scanDir)))
+    for (const auto &entry : fs::recursive_directory_iterator(fs::current_path().string().c_str()))
     {
         if (should_check_for_extension(configManager->getExtensionsToCheck(), entry.path().extension().string().c_str()))
         {
-            logger->log('I', "Found file: %s%s%s, Saving modify time as: ", MEDIUM_STATE_BLUE_F, entry.path().string().c_str(), RESET_F, get_current_time().c_str());
+            logger->log('I', "Found file: %s%s%s, Saving modify time as: %s",
+                        MEDIUM_STATE_BLUE_F, entry.path().string().c_str(), RESET_F, get_current_time().c_str());
             lastModifiedTimes[entry.path().string()] = fs::last_write_time(entry);
         }
     }
+
     int time = configManager->getInterval();
     logger->log('I', "Checking for file modifications every %d milliseconds", time);
+
     while (true)
     {
-        this_thread::sleep_for(chrono::milliseconds(time));
+        std::this_thread::sleep_for(std::chrono::milliseconds(time));
 
-        for (const auto &entry : fs::recursive_directory_iterator(fs::u8path(scanDir)))
+        for (const auto &entry : fs::recursive_directory_iterator(fs::current_path())) // Fixed iteration
         {
             if (should_check_for_extension(configManager->getExtensionsToCheck(), entry.path().extension().string().c_str()))
             {
@@ -72,6 +111,15 @@ void BuildDaemon::watch()
                 {
                     logger->log('I', "File modified: %s%s%s", MEDIUM_STATE_BLUE_F, entry.path().string().c_str(), RESET_F);
                     lastModifiedTimes[entry.path().string()] = currentModifyTime;
+                    logger->log('I', "Running build command, close all the related processes...");
+
+                    int result = system("make");
+                    if (result != 0)
+                    {
+                        logger->log('E', getErrorMessage(result));
+                        continue;
+                    }
+                    logger->log('S', "Build command successful");
                 }
             }
         }

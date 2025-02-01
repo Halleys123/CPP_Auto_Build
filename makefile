@@ -15,3 +15,6 @@ complete_build: main.cpp
 
 Logger: $(src_dir)/Logger.cpp
 	g++ -shared -o ${build_dir}/Logger.dll $(src_dir)/Logger.cpp $(include_dir)
+
+test:
+	echo "Working test"
