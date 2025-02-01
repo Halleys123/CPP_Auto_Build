@@ -22,22 +22,27 @@ ConfigManager::~ConfigManager()
 {
     if (this->LogFile)
     {
+        delete[] this->LogFile;
         delete this->LogFile;
     }
     if (this->ScanDirectory)
     {
+        delete[] this->ScanDirectory;
         delete this->ScanDirectory;
     }
     if (this->ExcludeDirectories)
     {
+        delete[] this->ExcludeDirectories;
         delete this->ExcludeDirectories;
     }
     if (this->ExcludeFiles)
     {
+        delete[] this->ExcludeFiles;
         delete this->ExcludeFiles;
     }
     if (this->ExtensionsToCheck)
     {
+        delete[] this->ExtensionsToCheck;
         delete this->ExtensionsToCheck;
     }
     this->SpecialBuildCommands.clear();
