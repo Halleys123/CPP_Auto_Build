@@ -27,6 +27,10 @@ int main(int argc, char **argv)
     const char *logFile = nullptr;
     parsePathsFromArguments(configFile, logFile, argv, argc);
 
+    // TODO(Major): Configmanager is currently using string and vector in some places that should be replaced
+    // TODO: with const char * and char ** respectively to reduce size and reduce dependencies
+    // TODO(BUG): Currently ConfigManager is using c_str for many of the state variables which is causing
+    // TODO: state variables to become dangling pointers replace them with strcpy method
     BuildDaemon buildDaemon(configFile, logFile);
     buildDaemon.watch();
     return 0;

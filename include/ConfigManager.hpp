@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 #include "Logger.hpp"
 
 class ConfigManager
@@ -7,14 +8,14 @@ private:
     Logger *logger = nullptr;
     const char *configFile = nullptr;
 
-    int Interval = NULL;
+    int Interval = 0;
     bool LogToFile = NULL;
     const char *LogFile = nullptr;
     const char *ScanDirectory = nullptr;
     const char **ExcludeDirectories = nullptr;
     const char **ExcludeFiles = nullptr;
     const char **ExtensionsToCheck = nullptr;
-    const char **SpecialBuildCommands = nullptr;
+    std::vector<std::vector<const char *>> SpecialBuildCommands;
 
 private:
     void ParseFile(int parseCount = 0);
@@ -22,6 +23,7 @@ private:
 
 public:
     ConfigManager(const char *configFile, const char *logFile, Logger *logger);
+    ~ConfigManager();
 
     int getInterval();
     bool getLogToFile();
@@ -30,5 +32,5 @@ public:
     const char **getExcludeDirectories();
     const char **getExcludeFiles();
     const char **getExtensionsToCheck();
-    const char **getSpecialBuildCommands();
+    std::vector<std::vector<const char *>> getSpecialBuildCommands();
 };

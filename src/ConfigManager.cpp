@@ -3,6 +3,7 @@
 #include "ConfigManager.hpp"
 #include <fstream>
 #include <stdio.h>
+#include <cstring>
 
 #define DEFAULT_FILE "config.cfg"
 
@@ -17,12 +18,38 @@ ConfigManager::ConfigManager(const char *configFile, const char *logFile, Logger
     logger->log('I', "ConfigManager initiated with config file: %s%s%s", MEDIUM_STATE_BLUE_F, configFile, RESET_F);
     this->ParseFile(parseTries);
 }
+ConfigManager::~ConfigManager()
+{
+    if (this->LogFile)
+    {
+        delete[] this->LogFile;
+        delete this->LogFile;
+    }
+    if (this->ScanDirectory)
+    {
+        delete[] this->ScanDirectory;
+        delete this->ScanDirectory;
+    }
+    if (this->ExcludeDirectories)
+    {
+        delete[] this->ExcludeDirectories;
+        delete this->ExcludeDirectories;
+    }
+    if (this->ExcludeFiles)
+    {
+        delete[] this->ExcludeFiles;
+        delete this->ExcludeFiles;
+    }
+    if (this->ExtensionsToCheck)
+    {
+        delete[] this->ExtensionsToCheck;
+        delete this->ExtensionsToCheck;
+    }
+    this->SpecialBuildCommands.clear();
+}
 
 void ConfigManager::ParseFile(int parseTries)
 {
-    // QUESTION(Halleys): What is happening in this if logic below
-    // ANSWER(Halleys):
-
     std::ifstream ConfigFile;
 
     if (!configFile)
@@ -48,11 +75,14 @@ void ConfigManager::ParseFile(int parseTries)
         if (!CreateFile())
         {
             logger->log('E', "Failed to create config file.");
-            exit(1);
         }
-        logger->log('S', "Default configuration file created sucessfully.");
-        this->configFile = DEFAULT_FILE;
-        ConfigFile.open(this->configFile);
+        else
+        {
+
+            logger->log('S', "Default configuration file created sucessfully.");
+            this->configFile = DEFAULT_FILE;
+            ConfigFile.open(this->configFile);
+        }
     }
 
     if (!ConfigFile.is_open())
@@ -64,6 +94,7 @@ void ConfigManager::ParseFile(int parseTries)
     logger->log('I', "Parsing values from the file %s%s%s", MEDIUM_STATE_BLUE_F, this->configFile, RESET_F);
     std::string line;
     int lineNumber = 0;
+    bool isReadingSpecialCommands = false;
     while (std::getline(ConfigFile, line))
     {
         lineNumber += 1;
@@ -110,7 +141,8 @@ void ConfigManager::ParseFile(int parseTries)
                 continue;
             }
 
-            this->LogFile = value.c_str();
+            this->LogFile = new char[strlen(value.c_str()) + 1];
+            strcpy(const_cast<char *>(this->LogFile), value.c_str());
             if (this->LogToFile)
             {
 
@@ -199,7 +231,7 @@ void ConfigManager::ParseFile(int parseTries)
             if (value == "")
             {
                 logger->log('I', "No extensions to check found");
-                this->ExtensionsToCheck = new const char *[1];
+                this->ExtensionsToCheck = const_cast<const char **>(new char *[1]);
                 this->ExtensionsToCheck[0] = nullptr;
                 continue;
             }
@@ -212,43 +244,87 @@ void ConfigManager::ParseFile(int parseTries)
             }
             logger->log('I', "Found %d extensions to check: %s%s%s", commas + 1, MEDIUM_STATE_BLUE_F, value.c_str(), RESET_F);
 
-            const char **p_ExtensionsToCheck = new const char *[commas + 2];
+            char **p_ExtensionsToCheck = new char *[commas + 2];
             int pos = 0;
             for (char i : value)
             {
                 if (i == ',')
                 {
-                    p_ExtensionsToCheck[pos] = ext.c_str();
+                    p_ExtensionsToCheck[pos] = new char[ext.size() + 1];
+                    strcpy(p_ExtensionsToCheck[pos], ext.c_str());
                     pos += 1;
                     ext = "";
                     continue;
                 }
                 ext += i;
             }
-            p_ExtensionsToCheck[pos] = ext.c_str();
+            p_ExtensionsToCheck[pos] = new char[ext.size() + 1];
+            strcpy(p_ExtensionsToCheck[pos], ext.c_str());
             p_ExtensionsToCheck[pos + 1] = nullptr;
-            this->ExtensionsToCheck = p_ExtensionsToCheck;
+            this->ExtensionsToCheck = const_cast<const char **>(p_ExtensionsToCheck);
         }
         else if (key == "SCANDIRECTORY")
         {
             if (value == "")
             {
                 logger->log('I', "Scan Directory not provided in configuration file, scanning subfolders recursively.");
-                this->ScanDirectory = "./";
+                strcpy(const_cast<char *>(this->ScanDirectory), "./");
                 continue;
             }
-            this->ScanDirectory = value.c_str();
+            this->ScanDirectory = new char[strlen(value.c_str()) + 1];
+            strcpy(const_cast<char *>(this->ScanDirectory), value.c_str());
             logger->log('I', "Scan Directory set to: %s%s%s.", MEDIUM_STATE_BLUE_F, this->ScanDirectory, RESET_F);
         }
+
         else if (key == "START")
         {
             if (value == "SPECIALCOMMANDS")
             {
-                // complete it
-                // steps are scan each line between start and end
-                // when reached end
-                // seek to next line give control back to while loop
+                logger->log('I', "Now scanning for special commands");
+                isReadingSpecialCommands = true;
             }
+        }
+        else if (key == "END" && isReadingSpecialCommands)
+        {
+            if (value == "SPECIALCOMMANDS")
+            {
+                logger->log('I', "Search for special commands ended successfully");
+                isReadingSpecialCommands = false;
+            }
+        }
+        else if (key != "END" && isReadingSpecialCommands)
+        {
+            // I will be using simple array scan line by line
+            // if git can use simple file read line by line, then why can't I
+            // Read each file name and map them along the build command
+            int comma = 0;
+            if (key == "")
+            {
+                logger->log('W', "No file provided ignoring line %d", lineNumber);
+                continue;
+            }
+            std::vector<const char *> temp;
+            temp.push_back(value.c_str());
+            std::string tempString;
+            for (char i : key)
+            {
+                if (i == ',')
+                {
+                    temp.push_back(tempString.c_str());
+                    tempString = "";
+                    continue;
+                }
+                tempString += i;
+            }
+            temp.push_back(tempString.c_str()); // Add the last file name
+            this->SpecialBuildCommands.push_back(temp);
+            char printStatement[1024] = {0}; // Allocate enough space for the print statement
+            sprintf(printStatement, "`%s` command will be used for files ", value.c_str());
+            for (const char *fileName : temp)
+            {
+                sprintf(printStatement + strlen(printStatement), " %s", fileName);
+            }
+            logger->log('I', "%s", printStatement);
         }
         else
         {
@@ -313,7 +389,7 @@ const char **ConfigManager::getExtensionsToCheck()
 {
     return this->ExtensionsToCheck;
 }
-const char **ConfigManager::getSpecialBuildCommands()
+std::vector<std::vector<const char *>> ConfigManager::getSpecialBuildCommands()
 {
     return this->SpecialBuildCommands;
 }
