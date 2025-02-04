@@ -15,7 +15,7 @@ private:
     const char **ExcludeDirectories = nullptr;
     const char **ExcludeFiles = nullptr;
     const char **ExtensionsToCheck = nullptr;
-    std::vector<std::vector<const char *>> SpecialBuildCommands;
+    const char **SpecialBuildCommands = nullptr;
 
 private:
     void ParseFile(int parseCount = 0);
@@ -32,5 +32,5 @@ public:
     const char **getExcludeDirectories();
     const char **getExcludeFiles();
     const char **getExtensionsToCheck();
-    std::vector<std::vector<const char *>> getSpecialBuildCommands();
+    const char **getSpecialBuildCommands();
 };

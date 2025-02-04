@@ -55,6 +55,8 @@ void BuildDaemon::watch()
 
     std::string scanDir = configManager->getScanDirectory();
     std::string currentDir = fs::current_path().string();
+    const char **excludeDir = configManager->getExcludeDirectories();
+    const char **SpecialBuildCommands = configManager->getSpecialBuildCommands();
 
     logger->log('I', "Current absolute directory: %s%s%s", MEDIUM_STATE_BLUE_F, currentDir.c_str(), RESET_F);
     logger->log('I', "Scanning directory: %s%s%s", MEDIUM_STATE_BLUE_F, scanDir.c_str(), RESET_F);
@@ -102,7 +104,7 @@ void BuildDaemon::watch()
 
         for (const auto &entry : fs::recursive_directory_iterator(fs::current_path())) // Fixed iteration
         {
-            if (should_check_for_extension(configManager->getExtensionsToCheck(), entry.path().extension().string().c_str()))
+            if (should_check_for_extension(configManager->getExtensionsToCheck(), entry.path().extension().string().c_str()) && !isExcludedDirectory(entry.path(), excludeDir, currentDir))
             {
                 auto currentModifyTime = fs::last_write_time(entry);
 
@@ -112,8 +114,13 @@ void BuildDaemon::watch()
                     logger->log('I', "File modified: %s%s%s", MEDIUM_STATE_BLUE_F, entry.path().string().c_str(), RESET_F);
                     lastModifiedTimes[entry.path().string()] = currentModifyTime;
                     logger->log('I', "Running build command, close all the related processes...");
+                    const char *buildCommand = "make\0";
 
-                    int result = system("make");
+                    // extract File name from the path
+                    // check if SpecialBuildCommads have that name if yes then run the build command
+                    // SpecialBuildCommands strucutre = FileName1 FileName2 .. FileNameN BuildCommand
+
+                    int result = system(buildCommand);
                     if (result != 0)
                     {
                         logger->log('E', getErrorMessage(result));
@@ -135,6 +142,20 @@ bool BuildDaemon::should_check_for_extension(const char **extensions, const char
     for (int i = 0; extensions[i] != nullptr; i++)
     {
         if (strcmp(extensions[i], extension) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool BuildDaemon::isExcludedDirectory(const fs::path &filePath, const char **excludeDir, const std::string &currentDir)
+{
+    fs::path normalizedFilePath = fs::absolute(filePath).lexically_normal();
+    for (int i = 0; excludeDir[i] != nullptr; i++)
+    {
+        fs::path excludePath = fs::absolute(fs::u8path(currentDir) / fs::u8path(excludeDir[i])).lexically_normal();
+        if (normalizedFilePath.string().find(excludePath.string()) != std::string::npos)
         {
             return true;
         }
