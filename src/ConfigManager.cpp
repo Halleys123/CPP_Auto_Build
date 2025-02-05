@@ -23,29 +23,27 @@ ConfigManager::~ConfigManager()
     if (this->LogFile)
     {
         delete[] this->LogFile;
-        delete this->LogFile;
     }
     if (this->ScanDirectory)
     {
         delete[] this->ScanDirectory;
-        delete this->ScanDirectory;
     }
     if (this->ExcludeDirectories)
     {
         delete[] this->ExcludeDirectories;
-        delete this->ExcludeDirectories;
     }
     if (this->ExcludeFiles)
     {
         delete[] this->ExcludeFiles;
-        delete this->ExcludeFiles;
     }
     if (this->ExtensionsToCheck)
     {
         delete[] this->ExtensionsToCheck;
-        delete this->ExtensionsToCheck;
     }
-    this->SpecialBuildCommands.clear();
+    if (this->SpecialBuildCommands)
+    {
+        delete[] this->SpecialBuildCommands;
+    }
 }
 
 void ConfigManager::ParseFile(int parseTries)
@@ -179,14 +177,16 @@ void ConfigManager::ParseFile(int parseTries)
             {
                 if (i == ',')
                 {
-                    p_ExcludeDirectories[pos] = dir.c_str();
+                    p_ExcludeDirectories[pos] = new char[dir.size() + 1];
+                    strcpy(const_cast<char *>(p_ExcludeDirectories[pos]), dir.c_str());
                     pos += 1;
                     dir = "";
                     continue;
                 }
                 dir += i;
             }
-            p_ExcludeDirectories[pos] = dir.c_str();
+            p_ExcludeDirectories[pos] = new char[dir.size() + 1];
+            strcpy(const_cast<char *>(p_ExcludeDirectories[pos]), dir.c_str());
             p_ExcludeDirectories[pos + 1] = nullptr;
             this->ExcludeDirectories = p_ExcludeDirectories;
         }
@@ -215,14 +215,16 @@ void ConfigManager::ParseFile(int parseTries)
             {
                 if (i == ',')
                 {
-                    p_ExcludeFiles[pos] = file.c_str();
+                    p_ExcludeFiles[pos] = new char[file.size() + 1];
+                    strcpy(const_cast<char *>(p_ExcludeFiles[pos]), file.c_str());
                     pos += 1;
                     file = "";
                     continue;
                 }
                 file += i;
             }
-            p_ExcludeFiles[pos] = file.c_str();
+            p_ExcludeFiles[pos] = new char[file.size() + 1];
+            strcpy(const_cast<char *>(p_ExcludeFiles[pos]), file.c_str());
             p_ExcludeFiles[pos + 1] = nullptr;
             this->ExcludeFiles = p_ExcludeFiles;
         }
@@ -297,34 +299,39 @@ void ConfigManager::ParseFile(int parseTries)
             // I will be using simple array scan line by line
             // if git can use simple file read line by line, then why can't I
             // Read each file name and map them along the build command
+            // Example configfile
+            // Logger.hpp,Logger.cpp=make build
             int comma = 0;
             if (key == "")
             {
                 logger->log('W', "No file provided ignoring line %d", lineNumber);
                 continue;
             }
-            std::vector<const char *> temp;
-            temp.push_back(value.c_str());
-            std::string tempString;
+            for (char i : key)
+            {
+                if (i == ',')
+                    comma += 1;
+            }
+            this->SpecialBuildCommands = new const char *[comma + 2];
+            this->SpecialBuildCommands[0] = new char[value.size() + 1];
+            strcpy(const_cast<char *>(this->SpecialBuildCommands[0]), value.c_str());
+            int pos = 1;
+            std::string file = "";
             for (char i : key)
             {
                 if (i == ',')
                 {
-                    temp.push_back(tempString.c_str());
-                    tempString = "";
+                    this->SpecialBuildCommands[pos] = new char[file.size() + 1];
+                    strcpy(const_cast<char *>(this->SpecialBuildCommands[pos]), file.c_str());
+                    pos += 1;
+                    file = "";
                     continue;
                 }
-                tempString += i;
+                file += i;
             }
-            temp.push_back(tempString.c_str()); // Add the last file name
-            this->SpecialBuildCommands.push_back(temp);
-            char printStatement[1024] = {0}; // Allocate enough space for the print statement
-            sprintf(printStatement, "`%s` command will be used for files ", value.c_str());
-            for (const char *fileName : temp)
-            {
-                sprintf(printStatement + strlen(printStatement), " %s", fileName);
-            }
-            logger->log('I', "%s", printStatement);
+            this->SpecialBuildCommands[pos] = new char[file.size() + 1];
+            strcpy(const_cast<char *>(this->SpecialBuildCommands[pos]), file.c_str());
+            this->SpecialBuildCommands[pos + 1] = nullptr;
         }
         else
         {
@@ -389,7 +396,7 @@ const char **ConfigManager::getExtensionsToCheck()
 {
     return this->ExtensionsToCheck;
 }
-std::vector<std::vector<const char *>> ConfigManager::getSpecialBuildCommands()
+const char **ConfigManager::getSpecialBuildCommands()
 {
     return this->SpecialBuildCommands;
 }

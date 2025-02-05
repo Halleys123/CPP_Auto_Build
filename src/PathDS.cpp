@@ -11,8 +11,12 @@ class Node
 public:
     virtual ~Node() = default;
     Node *children;
-    virtual void AddChild(char c) = 0;
+    virtual void AddChild(char ch) = 0;
     virtual void AddChild(char *cmd) = 0;
+};
+
+class RootNode : Node
+{
 };
 
 class InnerNode : public Node
@@ -25,6 +29,7 @@ public:
     {
     }
 };
+
 class LeafNode : public Node
 {
 private:
